@@ -49,81 +49,70 @@ resource "helm_release" "keycloak" {
   create_namespace = var.create_namespace
   keyring          = ""
 
-  set {
-    name  = "auth.adminUser"
-    value = local.keycloak_username
-  }
-
-  set {
-    name  = "auth.adminPassword"
-    value = local.keycloak_password
-  }
-
-  dynamic "set" {
-    for_each = var.create_postgresql == true ? {
-      "postgresql.enabled"               = true
-      "postgresql.auth.database"         = var.postgresql_db_name
-      "postgresql.auth.postgresPassword" = local.postgresql_password
-      "postgresql.auth.username"         = var.postgresql_username
-      "postgresql.auth.password"         = local.postgresql_password
-      } : {
-      "postgresql.enabled"        = false
-      "externalDatabase.host"     = var.postgresql_host
-      "externalDatabase.user"     = var.postgresql_username
-      "externalDatabase.database" = var.postgresql_db_name
-      "externalDatabase.password" = local.postgresql_password
-    }
-
-    content {
-      name  = set.key
-      value = set.value
-    }
-  }
-
-  set {
-    name  = "global.defaultStorageClass"
-    value = var.storage_class_name
-  }
-
-  dynamic "set" {
-    for_each = var.node_selector
-    content {
-      name  = "nodeSelector.${set.key}"
-      value = set.value
-    }
-  }
-
-  dynamic "set" {
-    for_each = var.tolerations
-    content {
-      name  = "tolerations[${set.key}].key"
-      value = lookup(set.value, "key", "")
-    }
-  }
-
-  dynamic "set" {
-    for_each = var.tolerations
-    content {
-      name  = "tolerations[${set.key}].operator"
-      value = lookup(set.value, "operator", "")
-    }
-  }
-
-  dynamic "set" {
-    for_each = var.tolerations
-    content {
-      name  = "tolerations[${set.key}].value"
-      value = lookup(set.value, "value", "")
-    }
-  }
-
-  dynamic "set" {
-    for_each = var.tolerations
-    content {
-      name  = "tolerations[${set.key}].effect"
-      value = lookup(set.value, "effect", "")
-    }
-  }
+  set = flatten([
+    [
+      {
+        name  = "auth.adminUser"
+        value = local.keycloak_username
+      },
+      {
+        name  = "auth.adminPassword"
+        value = local.keycloak_password
+      },
+      {
+        name  = "global.defaultStorageClass"
+        value = var.storage_class_name
+      },
+    ],
+    [
+      for key, value in var.create_postgresql == true ? {
+        "postgresql.enabled"               = true
+        "postgresql.auth.database"         = var.postgresql_db_name
+        "postgresql.auth.postgresPassword" = local.postgresql_password
+        "postgresql.auth.username"         = var.postgresql_username
+        "postgresql.auth.password"         = local.postgresql_password
+        } : {
+        "postgresql.enabled"        = false
+        "externalDatabase.host"     = var.postgresql_host
+        "externalDatabase.user"     = var.postgresql_username
+        "externalDatabase.database" = var.postgresql_db_name
+        "externalDatabase.password" = local.postgresql_password
+        } : {
+        name  = key
+        value = value
+      }
+    ],
+    [
+      for key, value in var.node_selector : {
+        name  = "nodeSelector.${key}"
+        value = value
+      }
+    ],
+    [
+      for key, value in var.tolerations : {
+        name  = "tolerations[${key}].key"
+        value = lookup(value, "key", "")
+      }
+    ],
+    [
+      for key, value in var.tolerations : {
+        name  = "tolerations[${key}].operator"
+        value = lookup(value, "operator", "")
+      }
+    ],
+    [
+      for key, value in var.tolerations : {
+        name  = "tolerations[${key}].value"
+        value = lookup(value, "value", "")
+      }
+    ],
+    [
+      for key, value in var.tolerations : {
+        name  = "tolerations[${key}].effect"
+        value = lookup(value, "effect", "")
+      }
+    ],
+  ])
 
   values = [local.manifest]
 
