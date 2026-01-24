@@ -42,7 +42,7 @@ YAML
 
 resource "helm_release" "keycloak" {
   name             = var.helm_release_name
-  repository       = "oci://registry-1.docker.io/bitnamicharts"
+  repository       = "https://charts.pascaliske.dev"
   chart            = "keycloak"
   version          = var.helm_chart_version
   namespace        = var.namespace
