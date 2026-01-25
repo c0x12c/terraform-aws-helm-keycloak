@@ -40,6 +40,12 @@ variable "service_type" {
   default     = "ClusterIP"
 }
 
+variable "keycloak_start_optimized" {
+  type        = bool
+  description = "Use --optimized flag for faster startup (requires pre-built image with configuration baked in)"
+  default     = false
+}
+
 variable "postgresql_host" {
   type        = string
   description = "Host for the PostgreSQL database"

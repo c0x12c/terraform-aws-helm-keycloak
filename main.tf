@@ -57,7 +57,24 @@ resource "helm_release" "keycloak" {
       },
     ],
     # extraArgs for Keycloak start command
-    [
+    var.keycloak_start_optimized ? [
+      {
+        name  = "extraArgs[0]"
+        value = "start"
+      },
+      {
+        name  = "extraArgs[1]"
+        value = "--optimized"
+      },
+      {
+        name  = "extraArgs[2]"
+        value = "--hostname-strict=false"
+      },
+      {
+        name  = "extraArgs[3]"
+        value = "--http-enabled=true"
+      },
+      ] : [
       {
         name  = "extraArgs[0]"
         value = "start"
