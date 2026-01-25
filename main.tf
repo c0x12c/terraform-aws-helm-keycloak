@@ -73,17 +73,28 @@ locals {
     { name = "postgresql.primary.persistence.storageClass", value = var.storage_class_name },
   ] : []
 
-  # YAML values for ingress annotations (handles special characters better)
-  ingress_annotations_yaml = var.create_ingress && var.ingress_class_name == "alb" ? yamlencode({
-    ingress = {
+  # YAML values for complex configurations
+  helm_values = yamlencode({
+    # Extra environment variables (must be a YAML string in keycloakx)
+    extraEnv = <<-EOT
+      - name: KEYCLOAK_ADMIN
+        value: "${local.keycloak_username}"
+      - name: KEYCLOAK_ADMIN_PASSWORD
+        value: "${local.keycloak_password}"
+      - name: JAVA_OPTS_APPEND
+        value: "-Djgroups.dns.query=${var.helm_release_name}-headless"
+    EOT
+
+    # Ingress annotations for ALB
+    ingress = var.create_ingress && var.ingress_class_name == "alb" ? {
       annotations = {
         "alb.ingress.kubernetes.io/group.name"   = var.ingress_group_name
         "alb.ingress.kubernetes.io/target-type"  = "ip"
         "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
         "alb.ingress.kubernetes.io/listen-ports" = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
       }
-    }
-  }) : ""
+    } : {}
+  })
 }
 
 resource "helm_release" "keycloak" {
@@ -94,8 +105,8 @@ resource "helm_release" "keycloak" {
   namespace        = var.namespace
   create_namespace = var.create_namespace
 
-  # Use values for complex nested structures with special characters
-  values = local.ingress_annotations_yaml != "" ? [local.ingress_annotations_yaml] : []
+  # Use values for complex nested structures
+  values = [local.helm_values]
 
   set = concat(
     # Keycloak startup command
@@ -104,15 +115,6 @@ resource "helm_release" "keycloak" {
       { name = "args[0]", value = "start" },
       { name = "args[1]", value = "--http-enabled=true" },
       { name = "args[2]", value = "--hostname-strict=false" },
-    ],
-    # Admin credentials
-    [
-      { name = "extraEnv[0].name", value = "KEYCLOAK_ADMIN" },
-      { name = "extraEnv[0].value", value = local.keycloak_username },
-      { name = "extraEnv[1].name", value = "KEYCLOAK_ADMIN_PASSWORD" },
-      { name = "extraEnv[1].value", value = local.keycloak_password },
-      { name = "extraEnv[2].name", value = "JAVA_OPTS_APPEND" },
-      { name = "extraEnv[2].value", value = "-Djgroups.dns.query=${var.helm_release_name}-headless" },
     ],
     # Database configuration
     local.database_set_values,
