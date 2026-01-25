@@ -57,17 +57,6 @@ locals {
     ]
   ])
 
-  # Ingress set values
-  ingress_set_values = var.create_ingress ? [
-    { name = "ingress.enabled", value = "true" },
-    { name = "ingress.ingressClassName", value = var.ingress_class_name },
-    { name = "ingress.rules[0].host", value = var.ingress_hostname },
-    { name = "ingress.rules[0].paths[0].path", value = "/*" },
-    { name = "ingress.rules[0].paths[0].pathType", value = "ImplementationSpecific" },
-    ] : [
-    { name = "ingress.enabled", value = "false" },
-  ]
-
   # Storage class value
   storage_class_values = var.storage_class_name != "" ? [
     { name = "postgresql.primary.persistence.storageClass", value = var.storage_class_name },
@@ -85,14 +74,27 @@ locals {
         value: "-Djgroups.dns.query=${var.helm_release_name}-headless"
     EOT
 
-    # Ingress annotations for ALB (joins existing ALB group)
-    ingress = var.create_ingress && var.ingress_class_name == "alb" ? {
-      annotations = {
+    # Full ingress configuration
+    ingress = {
+      enabled          = var.create_ingress
+      ingressClassName = var.create_ingress ? var.ingress_class_name : ""
+      annotations = var.create_ingress && var.ingress_class_name == "alb" ? {
         "kubernetes.io/ingress.class"           = "alb"
         "alb.ingress.kubernetes.io/group.name"  = var.ingress_group_name
         "alb.ingress.kubernetes.io/target-type" = "ip"
-      }
-    } : {}
+      } : {}
+      rules = var.create_ingress ? [
+        {
+          host = var.ingress_hostname
+          paths = [
+            {
+              path     = "/*"
+              pathType = "ImplementationSpecific"
+            }
+          ]
+        }
+      ] : []
+    }
   })
 }
 
@@ -134,8 +136,6 @@ resource "helm_release" "keycloak" {
     local.node_selector_values,
     # Tolerations
     local.tolerations_values,
-    # Ingress basic config
-    local.ingress_set_values,
     # Service configuration
     [
       { name = "service.type", value = "ClusterIP" },
