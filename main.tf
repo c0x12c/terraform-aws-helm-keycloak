@@ -57,13 +57,13 @@ locals {
     ]
   ])
 
-  # Ingress set values (without annotations that have special characters)
+  # Ingress set values
   ingress_set_values = var.create_ingress ? [
     { name = "ingress.enabled", value = "true" },
     { name = "ingress.ingressClassName", value = var.ingress_class_name },
     { name = "ingress.rules[0].host", value = var.ingress_hostname },
-    { name = "ingress.rules[0].paths[0].path", value = "/" },
-    { name = "ingress.rules[0].paths[0].pathType", value = "Prefix" },
+    { name = "ingress.rules[0].paths[0].path", value = "/*" },
+    { name = "ingress.rules[0].paths[0].pathType", value = "ImplementationSpecific" },
     ] : [
     { name = "ingress.enabled", value = "false" },
   ]
@@ -85,9 +85,10 @@ locals {
         value: "-Djgroups.dns.query=${var.helm_release_name}-headless"
     EOT
 
-    # Ingress annotations for ALB (minimal - joins existing ALB group)
+    # Ingress annotations for ALB (joins existing ALB group)
     ingress = var.create_ingress && var.ingress_class_name == "alb" ? {
       annotations = {
+        "kubernetes.io/ingress.class"           = "alb"
         "alb.ingress.kubernetes.io/group.name"  = var.ingress_group_name
         "alb.ingress.kubernetes.io/target-type" = "ip"
       }
