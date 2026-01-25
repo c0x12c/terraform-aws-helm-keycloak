@@ -102,9 +102,9 @@ locals {
       tls = []
     }
 
-    # Service configuration - map to Keycloak's default HTTP port 8080
+    # Service configuration - map to Keycloak's HTTP port
     service = {
-      httpPort = 8080
+      httpPort = 9000
     }
   })
 }
