@@ -57,22 +57,14 @@ locals {
     ]
   ])
 
-  # Ingress values
-  ingress_values = var.create_ingress ? concat(
-    [
-      { name = "ingress.enabled", value = "true" },
-      { name = "ingress.ingressClassName", value = var.ingress_class_name },
-      { name = "ingress.rules[0].host", value = var.ingress_hostname },
-      { name = "ingress.rules[0].paths[0].path", value = "/" },
-      { name = "ingress.rules[0].paths[0].pathType", value = "Prefix" },
-    ],
-    var.ingress_class_name == "alb" ? [
-      { name = "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/group\\.name", value = var.ingress_group_name },
-      { name = "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type", value = "ip" },
-      { name = "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme", value = "internet-facing" },
-      { name = "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports", value = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]" },
-    ] : []
-    ) : [
+  # Ingress set values (without annotations that have special characters)
+  ingress_set_values = var.create_ingress ? [
+    { name = "ingress.enabled", value = "true" },
+    { name = "ingress.ingressClassName", value = var.ingress_class_name },
+    { name = "ingress.rules[0].host", value = var.ingress_hostname },
+    { name = "ingress.rules[0].paths[0].path", value = "/" },
+    { name = "ingress.rules[0].paths[0].pathType", value = "Prefix" },
+    ] : [
     { name = "ingress.enabled", value = "false" },
   ]
 
@@ -80,6 +72,18 @@ locals {
   storage_class_values = var.storage_class_name != "" ? [
     { name = "postgresql.primary.persistence.storageClass", value = var.storage_class_name },
   ] : []
+
+  # YAML values for ingress annotations (handles special characters better)
+  ingress_annotations_yaml = var.create_ingress && var.ingress_class_name == "alb" ? yamlencode({
+    ingress = {
+      annotations = {
+        "alb.ingress.kubernetes.io/group.name"   = var.ingress_group_name
+        "alb.ingress.kubernetes.io/target-type"  = "ip"
+        "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
+        "alb.ingress.kubernetes.io/listen-ports" = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
+      }
+    }
+  }) : ""
 }
 
 resource "helm_release" "keycloak" {
@@ -89,6 +93,9 @@ resource "helm_release" "keycloak" {
   version          = var.helm_chart_version
   namespace        = var.namespace
   create_namespace = var.create_namespace
+
+  # Use values for complex nested structures with special characters
+  values = local.ingress_annotations_yaml != "" ? [local.ingress_annotations_yaml] : []
 
   set = concat(
     # Keycloak startup command
@@ -126,8 +133,8 @@ resource "helm_release" "keycloak" {
     local.node_selector_values,
     # Tolerations
     local.tolerations_values,
-    # Ingress
-    local.ingress_values,
+    # Ingress basic config
+    local.ingress_set_values,
     # Service configuration
     [
       { name = "service.type", value = "ClusterIP" },
