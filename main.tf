@@ -79,9 +79,12 @@ locals {
       enabled          = var.create_ingress
       ingressClassName = var.create_ingress ? var.ingress_class_name : ""
       annotations = var.create_ingress && var.ingress_class_name == "alb" ? {
-        "kubernetes.io/ingress.class"           = "alb"
-        "alb.ingress.kubernetes.io/group.name"  = var.ingress_group_name
-        "alb.ingress.kubernetes.io/target-type" = "ip"
+        "kubernetes.io/ingress.class"                = "alb"
+        "alb.ingress.kubernetes.io/group.name"       = var.ingress_group_name
+        "alb.ingress.kubernetes.io/target-type"      = "ip"
+        "alb.ingress.kubernetes.io/healthcheck-path" = "/health/"
+        "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
+        "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
       } : {}
       rules = var.create_ingress ? [
         {
