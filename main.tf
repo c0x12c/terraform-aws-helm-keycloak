@@ -82,7 +82,7 @@ locals {
         "kubernetes.io/ingress.class"                = "alb"
         "alb.ingress.kubernetes.io/group.name"       = var.ingress_group_name
         "alb.ingress.kubernetes.io/target-type"      = "ip"
-        "alb.ingress.kubernetes.io/healthcheck-path" = "/auth/health/ready"
+        "alb.ingress.kubernetes.io/healthcheck-path" = "/health/ready"
         "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
         "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
       } : {}
