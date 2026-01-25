@@ -55,6 +55,25 @@ resource "helm_release" "keycloak" {
         value = "--http-enabled=true"
       },
     ],
+    # Probe configuration (allow time for Keycloak build/optimization on first start)
+    [
+      {
+        name  = "livenessProbe.initialDelaySeconds"
+        value = "120"
+      },
+      {
+        name  = "livenessProbe.failureThreshold"
+        value = "10"
+      },
+      {
+        name  = "readinessProbe.initialDelaySeconds"
+        value = "60"
+      },
+      {
+        name  = "readinessProbe.failureThreshold"
+        value = "10"
+      },
+    ],
     # Environment variables for database configuration
     [
       {
