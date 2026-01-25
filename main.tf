@@ -59,19 +59,19 @@ resource "helm_release" "keycloak" {
     [
       {
         name  = "livenessProbe.initialDelaySeconds"
-        value = "120"
+        value = var.liveness_probe_initial_delay
       },
       {
         name  = "livenessProbe.failureThreshold"
-        value = "10"
+        value = var.liveness_probe_failure_threshold
       },
       {
         name  = "readinessProbe.initialDelaySeconds"
-        value = "60"
+        value = var.readiness_probe_initial_delay
       },
       {
         name  = "readinessProbe.failureThreshold"
-        value = "10"
+        value = var.readiness_probe_failure_threshold
       },
     ],
     # Environment variables for database configuration

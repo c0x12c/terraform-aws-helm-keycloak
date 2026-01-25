@@ -93,6 +93,30 @@ variable "ingress_hostname" {
   default     = ""
 }
 
+variable "liveness_probe_initial_delay" {
+  type        = number
+  description = "Initial delay seconds for liveness probe"
+  default     = 120
+}
+
+variable "liveness_probe_failure_threshold" {
+  type        = number
+  description = "Failure threshold for liveness probe"
+  default     = 10
+}
+
+variable "readiness_probe_initial_delay" {
+  type        = number
+  description = "Initial delay seconds for readiness probe"
+  default     = 60
+}
+
+variable "readiness_probe_failure_threshold" {
+  type        = number
+  description = "Failure threshold for readiness probe"
+  default     = 10
+}
+
 variable "node_selector" {
   description = "Node selector for the keycloak"
   type        = map(string)
