@@ -3,5 +3,6 @@ output "keycloak_username" {
 }
 
 output "keycloak_password" {
-  value = local.keycloak_password
+  value     = local.keycloak_password
+  sensitive = true
 }

@@ -1,7 +1,6 @@
 module "example" {
   source = "../.."
 
-  create_postgresql   = false
   postgresql_host     = "db_host"
   postgresql_db_name  = "db_name"
   postgresql_username = "db_username"

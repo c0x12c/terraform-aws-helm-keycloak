@@ -1,2 +1,7 @@
 **/.terraform
 **/.terraform.lock.hcl
+
+# Claude
+.claude/settings.local.json
+**/CLAUDE.md
+!/CLAUDE.md

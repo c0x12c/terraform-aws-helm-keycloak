@@ -3,16 +3,9 @@ resource "random_password" "keycloak_password" {
   special = false
 }
 
-resource "random_password" "postgresql_password" {
-  count   = var.create_postgresql == true ? 1 : 0
-  length  = 32
-  special = false
-}
-
 locals {
-  keycloak_username   = "admin"
-  keycloak_password   = random_password.keycloak_password.result
-  postgresql_password = var.create_postgresql == true ? random_password.postgresql_password[0].result : var.postgresql_password
+  keycloak_username = "admin"
+  keycloak_password = random_password.keycloak_password.result
 
   manifest = <<-YAML
 resources:
@@ -22,21 +15,8 @@ resources:
   limits:
     cpu: ${var.keycloak_cpu}
     memory: ${var.keycloak_memory}
-ingress:
-  enabled: ${var.create_ingress}
-  ingressClassName: ${var.ingress_class_name}
-  annotations:
-    alb.ingress.kubernetes.io/group.name: ${var.ingress_group_name}
-    kubernetes.io/ingress.class: ${var.ingress_class_name}
-    alb.ingress.kubernetes.io/target-type: "ip"
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
-  hostname: ${var.ingress_hostname}
-  pathType: Prefix
 service:
-  type: ClusterIP
-production: true
-proxyHeaders: "xforwarded"
+  type: ${var.service_type}
 YAML
 }
 
@@ -49,65 +29,96 @@ resource "helm_release" "keycloak" {
   create_namespace = var.create_namespace
 
   set = flatten([
+    # Admin credentials (pascaliske chart uses secret.values)
     [
       {
-        name  = "auth.adminUser"
+        name  = "secret.values.KEYCLOAK_ADMIN"
         value = local.keycloak_username
       },
       {
-        name  = "auth.adminPassword"
+        name  = "secret.values.KEYCLOAK_ADMIN_PASSWORD"
         value = local.keycloak_password
       },
+    ],
+    # extraArgs for Keycloak start command
+    [
       {
-        name  = "global.defaultStorageClass"
-        value = var.storage_class_name
+        name  = "extraArgs[0]"
+        value = "start"
+      },
+      {
+        name  = "extraArgs[1]"
+        value = "--hostname-strict=false"
+      },
+      {
+        name  = "extraArgs[2]"
+        value = "--http-enabled=true"
       },
     ],
+    # Environment variables for database configuration
     [
-      for key, value in var.create_postgresql == true ? {
-        "postgresql.enabled"               = true
-        "postgresql.auth.database"         = var.postgresql_db_name
-        "postgresql.auth.postgresPassword" = local.postgresql_password
-        "postgresql.auth.username"         = var.postgresql_username
-        "postgresql.auth.password"         = local.postgresql_password
-        } : {
-        "postgresql.enabled"        = false
-        "externalDatabase.host"     = var.postgresql_host
-        "externalDatabase.user"     = var.postgresql_username
-        "externalDatabase.database" = var.postgresql_db_name
-        "externalDatabase.password" = local.postgresql_password
-        } : {
-        name  = key
-        value = value
-      }
+      {
+        name  = "env[0].name"
+        value = "KC_DB"
+      },
+      {
+        name  = "env[0].value"
+        value = "postgres"
+      },
+      {
+        name  = "env[1].name"
+        value = "KC_DB_URL"
+      },
+      {
+        name  = "env[1].value"
+        value = "jdbc:postgresql://${var.postgresql_host}:${var.postgresql_port}/${var.postgresql_db_name}"
+      },
+      {
+        name  = "env[2].name"
+        value = "KC_DB_USERNAME"
+      },
+      {
+        name  = "env[2].value"
+        value = var.postgresql_username
+      },
+      {
+        name  = "env[3].name"
+        value = "KC_DB_PASSWORD"
+      },
+      {
+        name  = "env[3].value"
+        value = var.postgresql_password
+      },
     ],
+    # Node selector (pascaliske chart uses controller.nodeSelector)
     [
       for key, value in var.node_selector : {
-        name  = "nodeSelector.${key}"
+        name  = "controller.nodeSelector.${key}"
         value = value
       }
     ],
+    # Tolerations (pascaliske chart uses controller.tolerations)
     [
       for key, value in var.tolerations : {
-        name  = "tolerations[${key}].key"
+        name  = "controller.tolerations[${key}].key"
         value = lookup(value, "key", "")
       }
     ],
     [
       for key, value in var.tolerations : {
-        name  = "tolerations[${key}].operator"
+        name  = "controller.tolerations[${key}].operator"
         value = lookup(value, "operator", "")
       }
     ],
     [
       for key, value in var.tolerations : {
-        name  = "tolerations[${key}].value"
+        name  = "controller.tolerations[${key}].value"
         value = lookup(value, "value", "")
       }
     ],
     [
       for key, value in var.tolerations : {
-        name  = "tolerations[${key}].effect"
+        name  = "controller.tolerations[${key}].effect"
         value = lookup(value, "effect", "")
       }
     ],

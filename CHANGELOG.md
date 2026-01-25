@@ -2,11 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0]() (2026-01-24)
+## [2.0.0]() (2026-01-24)
 
-### Changes
+### ⚠ BREAKING CHANGES
 
-* Remove unused `keyring` attribute from helm_release resource.
+* Switch from Bitnami chart to pascaliske/keycloak chart with updated configuration structure.
+* AWS ALB ingress now managed via separate `kubernetes_ingress_v1` resource.
 
 ## [1.1.0]() (2025-10-12)
 

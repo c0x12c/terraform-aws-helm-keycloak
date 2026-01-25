@@ -3,6 +3,7 @@ variable "namespace" {
   type        = string
   default     = "keycloak"
 }
+
 variable "helm_release_name" {
   description = "The Helm release of the services."
   type        = string
@@ -33,9 +34,21 @@ variable "keycloak_memory" {
   default     = "1024Mi"
 }
 
-variable "create_postgresql" {
-  type    = bool
-  default = true
+variable "service_type" {
+  type        = string
+  description = "Kubernetes service type"
+  default     = "ClusterIP"
+}
+
+variable "postgresql_host" {
+  type        = string
+  description = "Host for the PostgreSQL database"
+}
+
+variable "postgresql_port" {
+  type        = number
+  description = "Port for the PostgreSQL database"
+  default     = 5432
 }
 
 variable "postgresql_db_name" {
@@ -53,24 +66,12 @@ variable "postgresql_username" {
 variable "postgresql_password" {
   type        = string
   description = "Password for the database"
-  default     = null
-}
-
-variable "postgresql_host" {
-  type        = string
-  description = "Host for the external database"
-  default     = ""
-}
-
-variable "storage_class_name" {
-  type        = string
-  description = "Storage class name"
-  default     = ""
+  sensitive   = true
 }
 
 variable "create_ingress" {
   type        = bool
-  description = "Whether to create the ingress"
+  description = "Whether to create the AWS ALB ingress"
   default     = true
 }
 
@@ -82,7 +83,7 @@ variable "ingress_class_name" {
 
 variable "ingress_group_name" {
   type        = string
-  description = "Ingress group name"
+  description = "ALB ingress group name"
   default     = "external"
 }
 
