@@ -10,7 +10,7 @@ variable "helm_release_name" {
 }
 
 variable "helm_chart_version" {
-  default     = "24.4.13"
+  default     = "25.2.0"
   type        = string
   description = "The chart version of keycloak"
 }

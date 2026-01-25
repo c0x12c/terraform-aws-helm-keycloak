@@ -47,7 +47,6 @@ resource "helm_release" "keycloak" {
   version          = var.helm_chart_version
   namespace        = var.namespace
   create_namespace = var.create_namespace
-  keyring          = ""
 
   set = flatten([
     [
