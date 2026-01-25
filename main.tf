@@ -85,13 +85,11 @@ locals {
         value: "-Djgroups.dns.query=${var.helm_release_name}-headless"
     EOT
 
-    # Ingress annotations for ALB
+    # Ingress annotations for ALB (minimal - joins existing ALB group)
     ingress = var.create_ingress && var.ingress_class_name == "alb" ? {
       annotations = {
-        "alb.ingress.kubernetes.io/group.name"   = var.ingress_group_name
-        "alb.ingress.kubernetes.io/target-type"  = "ip"
-        "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
-        "alb.ingress.kubernetes.io/listen-ports" = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
+        "alb.ingress.kubernetes.io/group.name"  = var.ingress_group_name
+        "alb.ingress.kubernetes.io/target-type" = "ip"
       }
     } : {}
   })

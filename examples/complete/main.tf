@@ -9,7 +9,7 @@ module "example" {
   postgresql_username = "db_username"
   postgresql_password = "db_password"
 
-  # Ingress configuration (ALB)
+  # Ingress configuration (joins existing ALB group)
   create_ingress     = true
   ingress_class_name = "alb"
   ingress_group_name = "external"

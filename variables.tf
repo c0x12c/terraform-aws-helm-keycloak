@@ -97,7 +97,7 @@ variable "ingress_class_name" {
 
 variable "ingress_group_name" {
   type        = string
-  description = "Ingress group name"
+  description = "ALB ingress group name to join"
   default     = "external"
 }
 
