@@ -3,6 +3,7 @@ variable "namespace" {
   type        = string
   default     = "keycloak"
 }
+
 variable "helm_release_name" {
   description = "The Helm release of the services."
   type        = string
@@ -10,15 +11,21 @@ variable "helm_release_name" {
 }
 
 variable "helm_chart_version" {
-  default     = "24.4.13"
+  default     = "2.4.4"
   type        = string
-  description = "The chart version of keycloak"
+  description = "The chart version of keycloakx (codecentric)"
 }
 
 variable "create_namespace" {
   type        = bool
   default     = true
   description = "Determines whether a new namespace should be created. Set to 'true' to create the namespace; otherwise, set to 'false' to use an existing namespace."
+}
+
+variable "replicas" {
+  type        = number
+  description = "Number of Keycloak replicas"
+  default     = 1
 }
 
 variable "keycloak_cpu" {
@@ -34,8 +41,9 @@ variable "keycloak_memory" {
 }
 
 variable "create_postgresql" {
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
+  description = "Whether to deploy a PostgreSQL instance via the chart's subchart"
 }
 
 variable "postgresql_db_name" {
@@ -54,12 +62,19 @@ variable "postgresql_password" {
   type        = string
   description = "Password for the database"
   default     = null
+  sensitive   = true
 }
 
 variable "postgresql_host" {
   type        = string
   description = "Host for the external database"
   default     = ""
+}
+
+variable "postgresql_port" {
+  type        = number
+  description = "Port for the external database"
+  default     = 5432
 }
 
 variable "storage_class_name" {
