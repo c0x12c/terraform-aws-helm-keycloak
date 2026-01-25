@@ -144,7 +144,7 @@ resource "helm_release" "keycloak" {
     # HTTP configuration for proxy
     [
       { name = "proxy.enabled", value = "true" },
-      { name = "proxy.mode", value = "edge" },
+      { name = "proxy.mode", value = "xforwarded" },
     ],
   )
 
