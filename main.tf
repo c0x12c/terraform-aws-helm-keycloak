@@ -17,6 +17,22 @@ resources:
     memory: ${var.keycloak_memory}
 service:
   type: ${var.service_type}
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: metrics
+  initialDelaySeconds: ${var.liveness_probe_initial_delay}
+  failureThreshold: ${var.liveness_probe_failure_threshold}
+  periodSeconds: 10
+  timeoutSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: metrics
+  initialDelaySeconds: ${var.readiness_probe_initial_delay}
+  failureThreshold: ${var.readiness_probe_failure_threshold}
+  periodSeconds: 10
+  timeoutSeconds: 5
 YAML
 }
 
@@ -53,25 +69,6 @@ resource "helm_release" "keycloak" {
       {
         name  = "extraArgs[2]"
         value = "--http-enabled=true"
-      },
-    ],
-    # Probe configuration (allow time for Keycloak build/optimization on first start)
-    [
-      {
-        name  = "livenessProbe.initialDelaySeconds"
-        value = var.liveness_probe_initial_delay
-      },
-      {
-        name  = "livenessProbe.failureThreshold"
-        value = var.liveness_probe_failure_threshold
-      },
-      {
-        name  = "readinessProbe.initialDelaySeconds"
-        value = var.readiness_probe_initial_delay
-      },
-      {
-        name  = "readinessProbe.failureThreshold"
-        value = var.readiness_probe_failure_threshold
       },
     ],
     # Environment variables for database configuration
