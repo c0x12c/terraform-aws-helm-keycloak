@@ -78,11 +78,13 @@ locals {
     ingress = {
       enabled          = var.create_ingress
       ingressClassName = var.create_ingress ? var.ingress_class_name : ""
+      servicePort      = "http"
       annotations = var.create_ingress && var.ingress_class_name == "alb" ? {
         "kubernetes.io/ingress.class"                = "alb"
         "alb.ingress.kubernetes.io/group.name"       = var.ingress_group_name
         "alb.ingress.kubernetes.io/target-type"      = "ip"
-        "alb.ingress.kubernetes.io/healthcheck-path" = "/auth/health/ready"
+        "alb.ingress.kubernetes.io/healthcheck-path" = "/health/ready"
+        "alb.ingress.kubernetes.io/healthcheck-port" = "8080"
         "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
         "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
       } : {}
@@ -98,6 +100,11 @@ locals {
         }
       ] : []
       tls = []
+    }
+
+    # Service configuration - map to Keycloak's default HTTP port 8080
+    service = {
+      httpPort = 8080
     }
   })
 }
