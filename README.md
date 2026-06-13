@@ -1,3 +1,5 @@
+> **ARCHIVED — read-only mirror.** This module is developed in [`c0x12c/terraform-modules`](https://github.com/c0x12c/terraform-modules) and published to `terraform.c0x12c.com`. This repository is a frozen mirror that only backs legacy `registry.terraform.io/c0x12c/<name>/<provider>` versions. Do not open issues or PRs here.
+
 # EKS-Helm/Keycloak
 
 This module helps install and configure Keycloak for EKS cluster via Helm chart.
